@@ -1,0 +1,212 @@
+datasource db {
+  provider  = "postgresql"
+}
+
+generator client {
+  provider        = "prisma-client"
+  output          = "./generated/prisma"
+  moduleFormat    = "cjs"
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  PIX
+  CREDIT_CARD
+  DEBIT_CARD
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid()
+  name      String   @db.VarChar(250)
+  email     String   @unique @db.VarChar(250)
+  password  String   @db.VarChar(250)
+  avatar    String?  @db.VarChar(250)
+  role      Role     @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  addresses Address[]
+  cart      Cart?
+  orders    Order[]
+
+  @@map("user")
+}
+
+model Address {
+  id           String   @id @default(uuid()) @db.Uuid()
+  userId       String   @db.Uuid()
+  user         User     @relation(fields: [userId], references: [id])
+  name         String   @db.VarChar(250)
+  street       String   @db.VarChar(250)
+  number       String   @db.VarChar(250)
+  complement   String?  @db.VarChar(250)
+  neighborhood String   @db.VarChar(250)
+  city         String   @db.VarChar(250)
+  state        String   @db.VarChar(250)
+  zipCode      String   @db.VarChar(20)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+
+  orders       Order[]
+
+  @@index([userId])
+  @@map("address")
+}
+
+model Category {
+  id        String   @id @default(uuid()) @db.Uuid()
+  name      String   @db.VarChar(250)
+  slug      String   @unique @db.VarChar(250)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  products  Product[]
+
+  @@map("category")
+}
+
+model Product {
+  id          String   @id @default(uuid()) @db.Uuid()
+  categoryId  String   @db.Uuid()
+  category    Category @relation(fields: [categoryId], references: [id])
+  name        String   @db.VarChar(250)
+  slug        String   @unique @db.VarChar(250)
+  description String?  @db.VarChar(250)
+  price       Decimal  @db.Decimal(10, 2)
+  stock       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  images      ProductImage[]
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+
+  @@index([categoryId])
+  @@index([active])
+  @@map("product")
+}
+
+model ProductImage {
+  id        String   @id @default(uuid()) @db.Uuid()
+  productId String   @db.Uuid()
+  product   Product  @relation(fields: [productId], references: [id])
+  url       String   @db.VarChar(250)
+  alt       String?  @db.VarChar(250)
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([productId])
+  @@map("product_image")
+}
+
+model Cart {
+  id        String   @id @default(uuid()) @db.Uuid()
+  userId    String   @db.Uuid() @unique
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  
+  items     CartItem[]
+
+  @@map("cart")
+}
+
+model CartItem {
+  id        String   @id @default(uuid()) @db.Uuid()
+  cartId    String   @db.Uuid()
+  cart      Cart     @relation(fields: [cartId], references: [id])
+  productId String   @db.Uuid()
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@unique([cartId, productId])
+  @@index([productId])
+  @@map("cart_item")
+}
+
+model Order {
+  id            String      @id @default(uuid()) @db.Uuid()
+  userId        String      @db.Uuid()
+  user          User        @relation(fields: [userId], references: [id])
+  addressId     String      @db.Uuid()
+  address       Address     @relation(fields: [addressId], references: [id])
+  status        OrderStatus @default(PENDING)
+  subtotal      Decimal     @db.Decimal(10, 2)
+  shippingCost  Decimal     @db.Decimal(10, 2)
+  total         Decimal     @db.Decimal(10, 2)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
+
+  items         OrderItem[]
+  payment       Payment?
+
+  @@index([userId])
+  @@index([addressId])
+  @@index([status])
+  @@map("order")
+}
+
+model OrderItem {
+  id          String   @id @default(uuid()) @db.Uuid()
+  orderId     String   @db.Uuid()
+  order       Order    @relation(fields: [orderId], references: [id])
+  productId   String   @db.Uuid()
+  product     Product  @relation(fields: [productId], references: [id])
+  productName String   @db.VarChar(250)
+  price       Decimal  @db.Decimal(10, 2)
+  quantity    Int      @db.Integer()
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_item")
+}
+
+model Payment {
+  id            String        @id @default(uuid()) @db.Uuid()
+  orderId       String        @unique @db.Uuid()
+  order         Order         @relation(fields: [orderId], references: [id])
+  method        PaymentMethod
+  status        PaymentStatus @default(PENDING)
+  transactionId String?
+  amount        Decimal       @db.Decimal(10, 2)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+
+  @@map("payment")
+}

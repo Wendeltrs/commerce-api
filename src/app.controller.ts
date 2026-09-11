@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common'
+import { Controller, Get, HttpStatus } from '@nestjs/common'
 import { ApiResponse } from '@nestjs/swagger'
 import { AppService } from './app.service'
 
@@ -8,6 +8,8 @@ export class AppController {
 
   @Get()
   @ApiResponse({
+    description: 'Health check',
+    status: HttpStatus.OK,
     schema: {
       type: 'object',
       properties: {
