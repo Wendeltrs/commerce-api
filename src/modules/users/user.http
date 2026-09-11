@@ -1,0 +1,33 @@
+GET http://localhost:3000/v1/users
+
+###
+
+GET http://localhost:3000/v1/users/da465f17-55bb-44e5-bbb6-6533a80784ca
+
+###
+
+GET http://localhost:3000/v1/users/email/teste@example.com
+
+###
+
+POST http://localhost:3000/v1/users
+Content-Type: application/json
+
+{
+  "name": "Teste",
+  "email": "teste@example.com",
+  "password": "12345678"
+}
+
+###
+
+PUT http://localhost:3000/v1/users/da465f17-55bb-44e5-bbb6-6533a80784ca
+Content-Type: application/json
+
+{
+  "name": "Teste example"
+}
+
+###
+
+DELETE http://localhost:3000/v1/users/da465f17-55bb-44e5-bbb6-6533a80784ca
