@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { QueryDto } from 'src/common/decorators/query/dto/query.dto'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
@@ -6,7 +6,7 @@ import { IUserRepository } from './repositories/IUserRepository'
 
 @Injectable()
 export class UsersService {
-  constructor(private userRepository: IUserRepository) {}
+  constructor(@Inject(IUserRepository) private userRepository: IUserRepository) {}
 
   public async getAll(query?: QueryDto) {
     return await this.userRepository.getAll(query)
