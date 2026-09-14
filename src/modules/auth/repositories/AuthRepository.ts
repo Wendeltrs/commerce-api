@@ -4,6 +4,7 @@ import { User } from 'prisma/generated/prisma/client'
 import { SessionService } from 'src/common/services/session/session.service'
 import { RESET_PASSWORD } from 'src/consts'
 import { IBcryptoRepository } from 'src/core/crypto/bcrypto/IBcryptoRepository'
+import { MailService } from 'src/modules/mail/mail.service'
 import { IUserRepository } from 'src/modules/users/repositories/IUserRepository'
 import { ChangePasswordDto } from '../dto/change-password.dto'
 import { ForgotPasswordDto } from '../dto/forgot-password.dto'
@@ -21,6 +22,7 @@ export class AuthRepository implements IAuthRepository {
     private bcrypt: IBcryptoRepository,
     private session: SessionService,
     private jwtService: JwtService,
+    private mail: MailService,
   ) {}
 
   async getMe(id: string): Promise<User> {
@@ -77,8 +79,13 @@ export class AuthRepository implements IAuthRepository {
       purpose: RESET_PASSWORD,
     })
 
-    // TODO: Create a microservice for sending emails and send the reset password email to the user
-    // this.mail.forgotPassword(user.email, access_token)
+    this.mail.send({
+      to: user.email,
+      template: 'forgot-password',
+      variables: {
+        url: `http://localhost:3000/v1/auth/reset-password?token=${access_token}`,
+      },
+    })
 
     return {
       message: 'Password reset email sent',
@@ -111,12 +118,11 @@ export class AuthRepository implements IAuthRepository {
     if (!user || !(await this.bcrypt.compare(data.currentPassword, user.password))) {
       throw new UnauthorizedException('Invalid credentials')
     }
-    return user
 
-    // const hashedPassword = await this.bcrypt.hash(data.newPassword)
+    const hashedPassword = await this.bcrypt.hash(data.newPassword)
 
-    // return await this.users.update(userId, {
-    //   password: hashedPassword,
-    // })
+    return await this.users.update(userId, {
+      password: hashedPassword,
+    })
   }
 }

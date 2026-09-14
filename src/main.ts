@@ -1,9 +1,11 @@
 import 'dotenv/config'
 import { ValidationPipe, VersioningType } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
+import { MicroserviceOptions, Transport } from '@nestjs/microservices'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import cookieParser from 'cookie-parser'
 import { AppModule } from './app.module'
+import { EMAIL_QUEUE } from './consts'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
@@ -47,6 +49,20 @@ async function bootstrap() {
   //Cookie
   app.use(cookieParser())
 
-  await app.listen(process.env.PORT ?? 3000)
+  //Microservices
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [process.env.RABBITMQ_URL!],
+      queue: EMAIL_QUEUE,
+      queueOptions: {
+        durable: true,
+      },
+    },
+  })
+
+  await app.startAllMicroservices()
+
+  await app.listen(process.env.PORT ?? 3001)
 }
 bootstrap()

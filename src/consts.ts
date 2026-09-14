@@ -1,2 +1,6 @@
 export const VALIDATE_ID = 'validate-id'
 export const RESET_PASSWORD = 'reset-password'
+export const EMAIL_FROM = 'Commerce API <no-reply@dev.com>'
+export const EMAIL_SERVICE = 'email-service'
+export const EMAIL_QUEUE = 'email-queue'
+export const SEND_EMAIL = 'send-email'
