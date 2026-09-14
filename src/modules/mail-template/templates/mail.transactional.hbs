@@ -1,0 +1,44 @@
+<style>
+  * {
+    margin: 0;
+  }
+</style>
+
+<div style="
+  background-color: #F4F6F8;
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 50px 0;
+">
+  <div style="
+  padding: 50px;
+  max-width: 600px;
+  text-align: center;
+  border-radius: 5px;
+  margin: 0 auto;
+  background-color: #FFFFFF;
+  ">
+    <div>
+      <img src="https://commerce-api.vercel.app/assets/logo_email_commerce.jpg" border="0"
+        alt="Logo Commerce API" style="
+        padding-bottom: 50px;
+        margin-left: -20px;
+        text-align: center;
+        width: 100%;
+        max-width: 200px;
+        min-width: 200px;
+        height: auto;">
+      <h1 style="color: #071845; font-size: 22px; margin: 0;">
+        {{title}}
+      </h1>
+    </div>
+    <div style="color: #55527A; font-size: 14px; text-align: left; padding: 35px 0; display: grid; gap: 20px; grid-template-columns: 1;">
+      {{> @partial-block }}
+    </div>
+    <div style="color: #8885AD; font-size: 12px;">
+      <p>
+        Se você encontrou algum problema ou precisar de assistência, não hesite em contatar nossa
+        <a href="" style="color: #071845; text-decoration: none;" target="_blank"
+          rel="noopener noreferrer">equipe de suporte.</a>
+      </p>
+    </div>
+  </div>
