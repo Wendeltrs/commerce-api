@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { QueryDto } from 'src/common/decorators/query/dto/query.dto'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
@@ -17,21 +17,15 @@ export class UsersService {
   }
 
   public async getByEmail(email: string) {
-    const user = await this.userRepository.getByEmail(email)
-
-    if (!user) {
-      throw new NotFoundException('User not found')
-    }
-
-    return user
+    return await this.userRepository.getByEmail(email)
   }
 
   public async create(data: CreateUserDto) {
     return await this.userRepository.create(data)
   }
 
-  public async uploadAvatar(_file: Express.Multer.File) {
-    // TODO: Implementation for uploading user avatar
+  public async uploadAvatar(file: Express.Multer.File) {
+    return await this.userRepository.uploadAvatar(file)
   }
 
   public async update(id: string, data: UpdateUserDto) {

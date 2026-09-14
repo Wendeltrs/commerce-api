@@ -5,7 +5,7 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import cookieParser from 'cookie-parser'
 import { AppModule } from './app.module'
-import { EMAIL_QUEUE } from './consts'
+import { ACCESS_TOKEN, EMAIL_QUEUE } from './consts'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
@@ -32,7 +32,7 @@ async function bootstrap() {
       },
       'jwt',
     )
-    .addCookieAuth('access_token')
+    .addCookieAuth(ACCESS_TOKEN)
     .build()
 
   const documentFactory = () => SwaggerModule.createDocument(app, config)

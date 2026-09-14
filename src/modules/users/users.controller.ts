@@ -23,6 +23,7 @@ import { Serializer } from 'src/common/decorators/serializer/serializer.decorato
 import { ValidateId } from 'src/common/decorators/validate-id/validate-id.decorator'
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth/jwt-auth.guard'
 import { ValidateIdInterceptor } from 'src/common/interceptors/validate-id/validate-id.interceptor'
+import { ACCESS_TOKEN } from 'src/consts'
 import { User } from 'src/models/user'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { UserDto } from './dto/user.dto'
@@ -32,7 +33,7 @@ import { UsersService } from './users.service'
 @Serializer(User)
 @UseInterceptors(ValidateIdInterceptor)
 @UseGuards(JwtAuthGuard)
-@ApiCookieAuth('access_token')
+@ApiCookieAuth(ACCESS_TOKEN)
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
