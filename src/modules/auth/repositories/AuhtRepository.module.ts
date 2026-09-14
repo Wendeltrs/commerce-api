@@ -26,6 +26,6 @@ import { IAuthRepository } from './IAuthRepository'
     SessionService,
     MailService,
   ],
-  exports: [IAuthRepository, SessionService],
+  exports: [IAuthRepository],
 })
 export class AuthRepositoryModule {}

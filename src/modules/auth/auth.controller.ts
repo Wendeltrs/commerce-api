@@ -4,6 +4,7 @@ import { AuthenticatedUser } from 'src/common/decorators/authenticated-user/auth
 import { Cookie } from 'src/common/decorators/cookie/cookie.decorator'
 import { Serializer } from 'src/common/decorators/serializer/serializer.decorator'
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth/jwt-auth.guard'
+import { ACCESS_TOKEN } from 'src/consts'
 import { User } from 'src/models/user'
 import { UserDto } from '../users/dto/user.dto'
 import { AuthService } from './auth.service'
@@ -22,7 +23,7 @@ export class AuthController {
   @ApiResponse({ type: UserDto, status: HttpStatus.OK })
   @Serializer(User)
   @UseGuards(JwtAuthGuard)
-  @ApiCookieAuth('access_token')
+  @ApiCookieAuth(ACCESS_TOKEN)
   public async getMe(@AuthenticatedUser() user: User) {
     return await this.authService.getMe(user.id)
   }
@@ -40,6 +41,11 @@ export class AuthController {
     return await this.authService.signIn(data)
   }
 
+  @Post('/sign-out')
+  @ApiResponse({ type: AuthDto, status: HttpStatus.OK })
+  @Cookie(true)
+  public async signOut() {}
+
   @Post('/forgot-password')
   @ApiResponse({ type: AuthDto, status: HttpStatus.OK })
   public async forgotPassword(@Body() data: ForgotPasswordDto) {
@@ -56,7 +62,7 @@ export class AuthController {
   @ApiResponse({ type: AuthDto, status: HttpStatus.OK })
   @Serializer(User)
   @UseGuards(JwtAuthGuard)
-  @ApiCookieAuth('access_token')
+  @ApiCookieAuth(ACCESS_TOKEN)
   public async changePassword(@Body() data: ChangePasswordDto) {
     return await this.authService.changePassword(data)
   }

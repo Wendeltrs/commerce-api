@@ -10,5 +10,5 @@ export abstract class IUserRepository {
   abstract create(data: CreateUserDto): Promise<User>
   abstract update(id: string, data: UpdateUserDto): Promise<User>
   abstract delete(id: string): Promise<void>
-  abstract uploadAvatar(file: Express.Multer.File): Promise<void>
+  abstract uploadAvatar(file: Express.Multer.File): Promise<User>
 }

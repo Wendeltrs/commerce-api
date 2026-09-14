@@ -6,10 +6,11 @@ import { AuthModule } from './modules/auth/auth.module'
 import { MailModule } from './modules/mail/mail.module'
 import { UsersModule } from './modules/users/users.module'
 import { PrismaService } from './prisma/prisma.service'
+import { CloudinaryService } from './common/services/cloudinary/cloudinary.service';
 
 @Module({
   imports: [UsersModule, AuthModule, BcryptoRepositoryModule, MailModule],
   controllers: [AppController],
-  providers: [AppService, PrismaService],
+  providers: [AppService, PrismaService, CloudinaryService],
 })
 export class AppModule {}
