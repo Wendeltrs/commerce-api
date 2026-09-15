@@ -15,6 +15,6 @@ import { UserRepository } from './UserRepository'
     SessionService,
     CloudinaryService,
   ],
-  exports: [IUserRepository, SessionService],
+  exports: [IUserRepository, SessionService, PrismaModule],
 })
 export class UserRepositoryModule {}
