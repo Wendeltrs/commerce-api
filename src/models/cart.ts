@@ -1,15 +1,21 @@
 import { Expose, Type } from 'class-transformer'
-import { Product } from './product'
+import { CartItem } from './cart-item'
+import { User } from './user'
 
-export class Category {
+export class Cart {
   @Expose()
   id: string
 
   @Expose()
-  name: string
+  userId: string
 
   @Expose()
-  slug: string
+  @Type(() => User)
+  user: User
+
+  @Expose()
+  @Type(() => CartItem)
+  items: CartItem[]
 
   @Expose()
   createdAt: Date
@@ -19,8 +25,4 @@ export class Category {
 
   @Expose()
   deletedAt: Date
-
-  @Expose()
-  @Type(() => Product)
-  products: Product[]
 }

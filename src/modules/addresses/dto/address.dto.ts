@@ -15,7 +15,7 @@ export class AddressDto {
   @ApiProperty({ format: 'date-time' }) createdAt: string
   @ApiProperty({ format: 'date-time' }) updatedAt: string
   @ApiProperty({ format: 'date-time' }) deletedAt: string
-  @ApiProperty({ type: UserDto }) user: UserDto
+  @ApiProperty({ type: () => UserDto }) user: UserDto
 
   // TODO: Additional properties for the full address DTO can be added here
   //@ApiProperty({ type: [Orders] }) orders: Orders[]

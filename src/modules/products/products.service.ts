@@ -20,6 +20,10 @@ export class ProductsService {
     return await this.productRepository.create(data)
   }
 
+  async upload(productId: string, files: Express.Multer.File[]) {
+    return await this.productRepository.upload(productId, files)
+  }
+
   async update(id: string, data: UpdateProductDto) {
     return await this.productRepository.update(id, data)
   }
