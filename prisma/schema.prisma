@@ -98,32 +98,17 @@ model Product {
   price       Decimal  @db.Decimal(10, 2)
   stock       Int      @default(0)
   active      Boolean  @default(true)
+  images      Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   deletedAt   DateTime?
 
-  images      ProductImage[]
   cartItems   CartItem[]
   orderItems  OrderItem[]
 
   @@index([categoryId])
   @@index([active])
   @@map("product")
-}
-
-model ProductImage {
-  id        String   @id @default(uuid()) @db.Uuid()
-  productId String   @db.Uuid()
-  product   Product  @relation(fields: [productId], references: [id])
-  url       String   @db.VarChar(250)
-  alt       String?  @db.VarChar(250)
-  position  Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-
-  @@index([productId])
-  @@map("product_image")
 }
 
 model Cart {

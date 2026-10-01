@@ -1,4 +1,5 @@
 import { Expose, Type } from 'class-transformer'
+import { CartItem } from './cart-item'
 import { Category } from './category'
 
 export class Product {
@@ -40,14 +41,14 @@ export class Product {
   @Expose()
   deletedAt: Date
 
-  // TODO: add relations
-  // @Expose()
-  // @Type(() => ProductImage)
-  // images: ProductImage[]
+  @Expose()
+  images: JSON
 
-  // @Expose()
-  // @Type(() => CartItem)
-  // cartItems: CartItem[]
+  @Expose()
+  @Type(() => CartItem)
+  cartItems: CartItem[]
+
+  // TODO: add relations
 
   // @Expose()
   // @Type(() => OrderItem)

@@ -1,0 +1,11 @@
+import { Module } from '@nestjs/common'
+import { CartController } from './carts.controller'
+import { CartService } from './carts.service'
+import { CartRepositoryModule } from './repositories/CartRepository.module'
+
+@Module({
+  imports: [CartRepositoryModule],
+  controllers: [CartController],
+  providers: [CartService],
+})
+export class CartModule {}

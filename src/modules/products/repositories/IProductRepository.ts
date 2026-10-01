@@ -7,6 +7,7 @@ export abstract class IProductRepository {
   abstract getAll(query?: QueryDto): Promise<[Product[], number]>
   abstract get(id: string): Promise<Product | null>
   abstract create(data: CreateProductDto): Promise<Product>
+  abstract upload(productId: string, files: Express.Multer.File[]): Promise<Product>
   abstract update(id: string, data: UpdateProductDto): Promise<Product>
   abstract delete(id: string): Promise<void>
 }

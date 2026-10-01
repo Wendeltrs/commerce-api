@@ -26,7 +26,7 @@ export class ValidateIdInterceptor implements NestInterceptor {
     }
 
     const request = context.switchToHttp().getRequest<Request>()
-    const { userId, addressId, categoryId, productId } = request.params
+    const { userId, addressId, categoryId, productId, cartItemId } = request.params
 
     if (userId) {
       const user = await this.prisma.user.findFirst({
@@ -77,6 +77,19 @@ export class ValidateIdInterceptor implements NestInterceptor {
 
       if (!product) {
         throw new NotFoundException('Product not found')
+      }
+    }
+
+    if (cartItemId) {
+      const cartItem = await this.prisma.cartItem.findFirst({
+        where: {
+          id: cartItemId as string,
+          deletedAt: null,
+        },
+      })
+
+      if (!cartItem) {
+        throw new NotFoundException('Cart item not found')
       }
     }
 

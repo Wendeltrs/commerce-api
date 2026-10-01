@@ -8,9 +8,10 @@ import { AddressesModule } from './modules/addresses/addresses.module'
 import { AuthModule } from './modules/auth/auth.module'
 import { CategoriesModule } from './modules/categories/categories.module'
 import { MailModule } from './modules/mail/mail.module'
+import { ProductsModule } from './modules/products/products.module'
 import { UsersModule } from './modules/users/users.module'
 import { PrismaService } from './prisma/prisma.service'
-import { ProductsModule } from './modules/products/products.module';
+import { CartModule } from './modules/carts/carts.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ProductsModule } from './modules/products/products.module';
     AddressesModule,
     CategoriesModule,
     ProductsModule,
+    CartModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, CloudinaryService, SessionService],
