@@ -35,7 +35,12 @@ export class UpdateAddressDto {
     @ApiProperty({ description: 'The state of the address', required: false })
     @IsString()
     @IsOptional()
-    state?: string
+    state_abbr?: string
+
+    @ApiProperty({ description: 'The country of the address', required: false })
+    @IsString()
+    @IsOptional()
+    country_id?: string
 
     @ApiProperty({ description: 'The zip code of the address', required: false })
     @IsString()

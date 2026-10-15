@@ -12,11 +12,12 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common'
-import { ApiResponse } from '@nestjs/swagger'
+import { ApiCookieAuth, ApiResponse } from '@nestjs/swagger'
 import { Serializer } from 'src/common/decorators/serializer/serializer.decorator'
 import { ValidateId } from 'src/common/decorators/validate-id/validate-id.decorator'
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth/jwt-auth.guard'
 import { ValidateIdInterceptor } from 'src/common/interceptors/validate-id/validate-id.interceptor'
+import { ACCESS_TOKEN } from 'src/consts'
 import { Cart } from 'src/models/cart'
 import { CartItem } from 'src/models/cart-item'
 import { CartService } from './carts.service'
@@ -28,6 +29,7 @@ import { UpdateCartItemDto } from './dto/update-cart-item.dto'
 @Controller({ path: 'carts', version: '1' })
 @UseInterceptors(ValidateIdInterceptor)
 @UseGuards(JwtAuthGuard)
+@ApiCookieAuth(ACCESS_TOKEN)
 export class CartController {
   constructor(private cartService: CartService) {}
 

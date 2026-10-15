@@ -24,6 +24,12 @@ export class ProductRepository implements IProductRepository {
         ...query?.where,
         deletedAt: null,
       },
+      include: {
+        cartItems: true,
+        category: true,
+        company: true,
+        orderItems: true,
+      }
     })
   }
 
@@ -33,6 +39,12 @@ export class ProductRepository implements IProductRepository {
         id,
         deletedAt: null,
       },
+      include: {
+        cartItems: true,
+        category: true,
+        company: true,
+        orderItems: true,
+      }
     })
   }
 
@@ -46,6 +58,11 @@ export class ProductRepository implements IProductRepository {
         stock: data.stock,
         categoryId: data.categoryId,
         active: data.active,
+        width: data.width,
+        height: data.height,
+        length: data.length,
+        weight: data.weight,
+        companyId: data.companyId,
       },
     })
   }
@@ -92,6 +109,11 @@ export class ProductRepository implements IProductRepository {
         stock: data.stock,
         categoryId: data.categoryId,
         active: data.active,
+        width: data.width,
+        height: data.height,
+        length: data.length,
+        weight: data.weight,
+        companyId: data.companyId,
       },
     })
   }

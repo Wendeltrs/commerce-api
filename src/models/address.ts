@@ -1,4 +1,6 @@
 import { Expose, Type } from 'class-transformer'
+import { Company } from './company'
+import { Order } from './order'
 import { User } from './user'
 
 export class Address {
@@ -24,7 +26,13 @@ export class Address {
   city: string
 
   @Expose()
-  state: string
+  state_abbr: string
+
+  @Expose()
+  country_id: string
+
+  @Expose()
+  default: boolean
 
   @Expose()
   zipCode: string
@@ -45,8 +53,11 @@ export class Address {
   @Expose()
   deletedAt: Date
 
-  //TODO: Additional properties for the full address model can be added here
-  //@Expose()
-  //@Type(() => Orders)
-  //orders: Orders[];
+  @Expose()
+  @Type(() => Order)
+  orders: Order[]
+
+  @Expose()
+  @Type(() => Company)
+  company: Company
 }

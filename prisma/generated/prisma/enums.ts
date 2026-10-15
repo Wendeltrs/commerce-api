@@ -42,7 +42,8 @@ export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus]
 export const PaymentMethod = {
   PIX: 'PIX',
   CREDIT_CARD: 'CREDIT_CARD',
-  DEBIT_CARD: 'DEBIT_CARD'
+  DEBIT_CARD: 'DEBIT_CARD',
+  BOLETO: 'BOLETO'
 } as const
 
 export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod]

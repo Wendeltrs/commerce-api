@@ -1,6 +1,8 @@
 import { Expose, Type } from 'class-transformer'
 import { CartItem } from './cart-item'
 import { Category } from './category'
+import { OrderItem } from './order-item'
+import { Company } from './company'
 
 export class Product {
   @Expose()
@@ -45,12 +47,29 @@ export class Product {
   images: JSON
 
   @Expose()
+  width: number
+
+  @Expose()
+  height: number
+
+  @Expose()
+  length: number
+
+  @Expose()
+  weight: number
+
+  @Expose()
   @Type(() => CartItem)
   cartItems: CartItem[]
 
-  // TODO: add relations
+  @Expose()
+  @Type(() => OrderItem)
+  orderItems: OrderItem[]
 
-  // @Expose()
-  // @Type(() => OrderItem)
-  // orderItems: OrderItem[]
+  @Expose()
+  companyId: string
+
+  @Expose()
+  @Type(() => Company)
+  company: Company
 }

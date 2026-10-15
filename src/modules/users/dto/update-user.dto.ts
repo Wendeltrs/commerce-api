@@ -17,4 +17,14 @@ export class UpdateUserDto {
   @IsOptional()
   @MinLength(8)
   password?: string
+
+  @ApiProperty({ description: 'The document of the user', required: false })
+  @IsString()
+  @IsOptional()
+  document?: string
+
+  @ApiProperty({ description: 'The phone of the user', required: false })
+  @IsString()
+  @IsOptional()
+  phone?: string
 }

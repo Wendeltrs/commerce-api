@@ -36,4 +36,29 @@ export class UpdateProductDto {
   @IsBoolean()
   @IsOptional()
   active?: boolean = true
+
+  @ApiProperty({ description: 'The width of the product', required: false })
+  @IsNumber()
+  @IsOptional()
+  width?: number
+
+  @ApiProperty({ description: 'The height of the product', required: false })
+  @IsNumber()
+  @IsOptional()
+  height?: number
+
+  @ApiProperty({ description: 'The length of the product', required: false })
+  @IsNumber()
+  @IsOptional()
+  length?: number
+
+  @ApiProperty({ description: 'The weight of the product', required: false })
+  @IsNumber()
+  @IsOptional()
+  weight?: number
+
+  @ApiProperty({ description: 'The company id of the product', required: false })
+  @IsString()
+  @IsOptional()
+  companyId?: string
 }

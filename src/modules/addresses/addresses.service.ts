@@ -23,6 +23,10 @@ export class AddressesService {
   public async update(id: string, data: UpdateAddressDto) {
     return await this.addressRepository.update(id, data)
   }
+  
+  public async setDefault(id: string) {
+    return await this.addressRepository.setDefault(id)
+  }
 
   public async delete(id: string) {
     return await this.addressRepository.delete(id)

@@ -8,5 +8,6 @@ export abstract class IAddressRepository {
   abstract get(id: string): Promise<Address | null>
   abstract create(data: CreateAddressDto): Promise<Address>
   abstract update(id: string, data: UpdateAddressDto): Promise<Address>
+  abstract setDefault(id: string): Promise<Address>
   abstract delete(id: string): Promise<void>
 }

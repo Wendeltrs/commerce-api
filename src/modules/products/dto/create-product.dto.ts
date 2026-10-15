@@ -36,4 +36,29 @@ export class CreateProductDto {
   @IsBoolean()
   @IsNotEmpty()
   active: boolean = true
+
+  @ApiProperty({ description: 'The width of the product' })
+  @IsNumber()
+  @IsNotEmpty()
+  width: number
+
+  @ApiProperty({ description: 'The height of the product' })
+  @IsNumber()
+  @IsNotEmpty()
+  height: number
+
+  @ApiProperty({ description: 'The length of the product' })
+  @IsNumber()
+  @IsNotEmpty()
+  length: number
+
+  @ApiProperty({ description: 'The weight of the product' })
+  @IsNumber()
+  @IsNotEmpty()
+  weight: number
+
+  @ApiProperty({ description: 'The company id of the product' })
+  @IsString()
+  @IsNotEmpty()
+  companyId: string
 }
