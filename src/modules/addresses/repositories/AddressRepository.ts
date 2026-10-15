@@ -46,6 +46,15 @@ export class AddressRepository implements IAddressRepository {
   }
 
   async create(data: CreateAddressDto): Promise<Address> {
+    const userId = this.session.getUserId()
+
+    const hasAddress = await this.prisma.address.findFirst({
+      where: {
+        userId,
+        deletedAt: null,
+      },
+    })
+
     return await this.prisma.address.create({
       data: {
         name: data.name,
@@ -54,9 +63,11 @@ export class AddressRepository implements IAddressRepository {
         complement: data.complement,
         neighborhood: data.neighborhood,
         city: data.city,
-        state: data.state,
+        state_abbr: data.state_abbr,
+        country_id: data.country_id,
         zipCode: data.zipCode,
         userId: this.session.getUserId(),
+        default: !hasAddress,
       },
     })
   }
@@ -73,8 +84,37 @@ export class AddressRepository implements IAddressRepository {
         complement: data.complement,
         neighborhood: data.neighborhood,
         city: data.city,
-        state: data.state,
+        state_abbr: data.state_abbr,
+        country_id: data.country_id,
         zipCode: data.zipCode,
+      },
+    })
+  }
+
+  async setDefault(id: string): Promise<Address> {
+    const userId = this.session.getUserId()
+
+    await this.prisma.address.updateMany({
+      where: {
+        userId,
+        default: true,
+        id: {
+          not: id,
+        },
+      },
+      data: {
+        default: false,
+      },
+    })
+
+    return await this.prisma.address.update({
+      where: {
+        id,
+        userId,
+        deletedAt: null,
+      },
+      data: {
+        default: true,
       },
     })
   }

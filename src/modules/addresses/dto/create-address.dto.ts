@@ -35,7 +35,12 @@ export class CreateAddressDto {
     @ApiProperty({ description: 'The state of the address' })
     @IsString()
     @IsNotEmpty()
-    state: string
+    state_abbr: string
+
+    @ApiProperty({ description: 'The country of the address' })
+    @IsString()
+    @IsNotEmpty()
+    country_id: string
 
     @ApiProperty({ description: 'The zip code of the address' })
     @IsString()

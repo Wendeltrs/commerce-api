@@ -8,7 +8,7 @@ import { AppModule } from './app.module'
 import { ACCESS_TOKEN, EMAIL_QUEUE } from './consts'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  const app = await NestFactory.create(AppModule, { rawBody: true })
 
   //Versioning
   app.enableVersioning({

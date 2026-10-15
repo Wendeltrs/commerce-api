@@ -1,6 +1,9 @@
 import { Expose, Type } from 'class-transformer'
+import { Role } from 'prisma/generated/prisma/enums'
 import { Address } from './address'
 import { Cart } from './cart'
+import { Company } from './company'
+import { Order } from './order'
 
 export class User {
   @Expose()
@@ -16,7 +19,17 @@ export class User {
   avatar: string
 
   @Expose()
-  role: string
+  role: Role = Role.CUSTOMER
+
+  @Expose()
+  document: string
+  
+  @Expose()
+  phone: string
+
+  @Expose()
+  @Type(() => Company)
+  company: Company
 
   @Expose()
   createdAt: Date
@@ -35,9 +48,7 @@ export class User {
   @Type(() => Cart)
   cart: Cart
 
-  //TODO: Additional properties for the full user model can be added here
-
-  //@Expose()
-  //@Type(() => Orders)
-  //orders: Orders[];
+  @Expose()
+  @Type(() => Order)
+  orders: Order[]
 }

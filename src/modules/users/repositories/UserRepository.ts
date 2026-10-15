@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
-import { User } from 'prisma/generated/prisma/client'
+import { Role, User } from 'prisma/generated/prisma/client'
 import { QueryDto } from 'src/common/decorators/query/dto/query.dto'
 import { CloudinaryService } from 'src/common/services/cloudinary/cloudinary.service'
 import { SessionService } from 'src/common/services/session/session.service'
@@ -26,9 +26,18 @@ export class UserRepository implements IUserRepository {
         deletedAt: null,
       },
       include: {
-        addresses: true,
+        addresses: {
+          where: {
+            deletedAt: null,
+          },
+        },
         cart: true,
-        orders: true,
+        orders: {
+          where: {
+            deletedAt: null,
+          },
+        },
+        company: true,
       },
     })
   }
@@ -43,6 +52,7 @@ export class UserRepository implements IUserRepository {
         addresses: true,
         cart: true,
         orders: true,
+        company: true,
       },
     })
   }
@@ -57,6 +67,7 @@ export class UserRepository implements IUserRepository {
         addresses: true,
         cart: true,
         orders: true,
+        company: true,
       },
     })
 
@@ -68,15 +79,19 @@ export class UserRepository implements IUserRepository {
   }
 
   async create(data: CreateUserDto): Promise<User> {
+    const role = data.role ?? Role.CUSTOMER
+
     return await this.prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
         password: data.password,
-        role: data.role,
-        cart: {
-          create: {},
-        },
+        role,
+        ...(role === Role.CUSTOMER && {
+          cart: {
+            create: {},
+          },
+        }),
       },
     })
   }
@@ -115,6 +130,8 @@ export class UserRepository implements IUserRepository {
         name: data.name,
         email: data.email,
         password: data.password,
+        document: data.document,
+        phone: data.phone,
       },
     })
   }

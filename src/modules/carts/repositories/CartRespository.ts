@@ -40,12 +40,23 @@ export class CartRespository implements ICartRepository {
       throw new NotFoundException('Cart not found')
     }
 
+    const product = await this.prisma.product.findUnique({
+      where: {
+        id: data.productId,
+      },
+    })
+
+    if (!product || product.stock < data.quantity || product.active === false) {
+      throw new NotFoundException(`Product ${product?.name} is out of stock`)
+    }
+
     const item = await this.prisma.cartItem.findUnique({
       where: {
         cartId_productId: {
           cartId: cart.id,
           productId: data.productId,
         },
+        deletedAt: null,
       },
     })
 
@@ -55,12 +66,8 @@ export class CartRespository implements ICartRepository {
           id: item.id,
         },
         data: {
-          quantity: item.deletedAt
-            ? data.quantity
-            : { increment: data.quantity },
-          deletedAt: null,
+          quantity: { increment: data.quantity },
         },
-        include: { product: true },
       })
     }
 
@@ -70,7 +77,6 @@ export class CartRespository implements ICartRepository {
         productId: data.productId,
         quantity: data.quantity,
       },
-      include: { product: true },
     })
   }
 
@@ -105,7 +111,6 @@ export class CartRespository implements ICartRepository {
       data: {
         quantity: data.quantity,
       },
-      include: { product: true },
     })
   }
 

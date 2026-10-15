@@ -62,6 +62,13 @@ export class AddressesController {
   async update(@Param('addressId', ParseUUIDPipe) id: string, @Body() data: UpdateAddressDto) {
     return await this.addressesService.update(id, data)
   }
+  
+  @Put(':addressId/default')
+  @ValidateId()
+  @ApiResponse({ type: AddressDto, status: HttpStatus.OK })
+  async setDefault(@Param('addressId', ParseUUIDPipe) id: string) {
+    return await this.addressesService.setDefault(id)
+  }
 
   @Delete(':addressId')
   @ValidateId()
