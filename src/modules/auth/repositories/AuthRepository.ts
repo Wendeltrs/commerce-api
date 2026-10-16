@@ -65,6 +65,19 @@ export class AuthRepository implements IAuthRepository {
     throw new UnauthorizedException('Invalid credentials')
   }
 
+  async googleLogin(user: User): Promise<{ message: string; access_token: string }> {
+    this.session.setUser(user)
+
+    return {
+      access_token: this.jwtService.sign({
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+      }),
+      message: 'Signed in with Google successfully',
+    }
+  }
+
   async forgotPassword(data: ForgotPasswordDto): Promise<{ message: string }> {
     const user = await this.users.getByEmail(data.email)
 

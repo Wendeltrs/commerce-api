@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
+import { User } from 'prisma/generated/prisma/client'
 import { ChangePasswordDto } from './dto/change-password.dto'
 import { ForgotPasswordDto } from './dto/forgot-password.dto'
 import { ResetPasswordDto } from './dto/reset-password.dto'
@@ -20,6 +21,10 @@ export class AuthService {
 
   public async signIn(data: SignInDto) {
     return await this.authRepository.signIn(data)
+  }
+
+  public async googleLogin(user: User) {
+    return await this.authRepository.googleLogin(user)
   }
 
   public async forgotPassword(data: ForgotPasswordDto) {

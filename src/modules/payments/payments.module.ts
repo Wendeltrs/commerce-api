@@ -6,9 +6,10 @@ import { StripeService } from 'src/common/services/stripe/stripe.service'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { PaymentsController } from './payments.controller'
 import { PaymentsService } from './payments.service'
+import { PaymentRepositoryModule } from './repositories/PaymentRepository.module'
 
 @Module({
-  imports: [HttpModule],
+  imports: [HttpModule, PaymentRepositoryModule],
   controllers: [PaymentsController],
   providers: [PaymentsService, SessionService, StripeService, PrismaService, ShippingService],
 })

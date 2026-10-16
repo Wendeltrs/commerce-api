@@ -1,11 +1,13 @@
 import { Body, Controller, Get, HttpStatus, Post, Query, UseGuards } from '@nestjs/common'
 import { ApiCookieAuth, ApiResponse } from '@nestjs/swagger'
+import type { User } from 'prisma/generated/prisma/client'
 import { AuthenticatedUser } from 'src/common/decorators/authenticated-user/authenticated-user.decorator'
 import { Cookie } from 'src/common/decorators/cookie/cookie.decorator'
 import { Serializer } from 'src/common/decorators/serializer/serializer.decorator'
+import { GoogleAuthGuard } from 'src/common/guards/google-auth/google-auth.guard'
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth/jwt-auth.guard'
 import { ACCESS_TOKEN } from 'src/consts'
-import { User } from 'src/models/user'
+import { User as UserModel } from 'src/models/user'
 import { UserDto } from '../users/dto/user.dto'
 import { AuthService } from './auth.service'
 import { AuthDto } from './dto/auth.dto'
@@ -21,10 +23,10 @@ export class AuthController {
 
   @Get('/me')
   @ApiResponse({ type: UserDto, status: HttpStatus.OK })
-  @Serializer(User)
+  @Serializer(UserModel)
   @UseGuards(JwtAuthGuard)
   @ApiCookieAuth(ACCESS_TOKEN)
-  public async getMe(@AuthenticatedUser() user: User) {
+  public async getMe(@AuthenticatedUser() user: UserModel) {
     return await this.authService.getMe(user.id)
   }
 
@@ -41,7 +43,18 @@ export class AuthController {
     return await this.authService.signIn(data)
   }
 
-  @Post('/sign-out')
+  @Get('/google/login')
+  @UseGuards(GoogleAuthGuard)
+  public async googleLogin() {}
+
+  @Get('/google/callback')
+  @UseGuards(GoogleAuthGuard)
+  @Cookie()
+  public async googleCallback(@AuthenticatedUser() user: User) {
+    return await this.authService.googleLogin(user)
+  }
+
+  @Get('/sign-out')
   @ApiResponse({ type: AuthDto, status: HttpStatus.OK })
   @Cookie(true)
   public async signOut() {}
@@ -60,7 +73,7 @@ export class AuthController {
 
   @Post('/change-password')
   @ApiResponse({ type: AuthDto, status: HttpStatus.OK })
-  @Serializer(User)
+  @Serializer(UserModel)
   @UseGuards(JwtAuthGuard)
   @ApiCookieAuth(ACCESS_TOKEN)
   public async changePassword(@Body() data: ChangePasswordDto) {
