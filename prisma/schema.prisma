@@ -102,7 +102,7 @@ model Product {
   name        String   @db.VarChar(250)
   slug        String   @unique @db.VarChar(250)
   description String?  @db.VarChar(250)
-  price       Decimal  @db.Decimal(10, 2)
+  price       Int      @db.Integer()
   stock       Int      @default(0)
   active      Boolean  @default(true)
   images      Json?
@@ -160,13 +160,13 @@ model Order {
   addressId           String      @db.Uuid()
   address             Address     @relation(fields: [addressId], references: [id])
   status              OrderStatus @default(PENDING)
-  subtotal            Decimal     @db.Decimal(10, 2)
+  subtotal            Int         @db.Integer()
   shippingId          String?     @db.VarChar(100)
-  shippingCost        Decimal     @db.Decimal(10, 2)
+  shippingCost        Int         @db.Integer()
   shippingName        String?     @db.VarChar(100)
   shippingCompanyName String?     @db.VarChar(100)
   shippingTime        String?     @db.VarChar(100)
-  total               Decimal     @db.Decimal(10, 2)
+  total               Int         @db.Integer()
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt()
   deletedAt           DateTime?
@@ -187,7 +187,7 @@ model OrderItem {
   productId   String   @db.Uuid()
   product     Product  @relation(fields: [productId], references: [id])
   productName String   @db.VarChar(250)
-  price       Decimal  @db.Decimal(10, 2)
+  price       Int      @db.Integer()
   quantity    Int      @db.Integer()
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt()
@@ -205,7 +205,7 @@ model Payment {
   method        PaymentMethod?
   status        PaymentStatus @default(PENDING)
   transactionId String?       @db.VarChar(250)
-  amount        Decimal       @db.Decimal(10, 2)
+  amount        Int           @db.Integer()
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt()
   deletedAt     DateTime?

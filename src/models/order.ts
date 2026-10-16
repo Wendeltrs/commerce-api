@@ -1,4 +1,4 @@
-import { Expose, Transform, Type } from 'class-transformer'
+import { Expose, Type } from 'class-transformer'
 import { OrderStatus } from 'prisma/generated/prisma/enums'
 import { Address } from './address'
 import { OrderItem } from './order-item'
@@ -27,15 +27,12 @@ export class Order {
   status: OrderStatus = OrderStatus.PENDING
 
   @Expose()
-  @Transform(({ value }) => (value == null ? value : Number(value)))
   total: number
 
   @Expose()
-  @Transform(({ value }) => (value == null ? value : Number(value)))
   subtotal: number
 
   @Expose()
-  @Transform(({ value }) => (value == null ? value : Number(value)))
   shippingCost: number
 
   @Expose()
