@@ -1,6 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { Cart, CartItem } from 'prisma/generated/prisma/client'
+import type { RedisClientType } from 'redis'
 import { SessionService } from 'src/common/services/session/session.service'
+import { REDIS_CLIENT } from 'src/consts'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { CreateCartItemDto } from '../dto/create-cart-item.dto'
 import { UpdateCartItemDto } from '../dto/update-cart-item.dto'
@@ -11,10 +13,20 @@ export class CartRespository implements ICartRepository {
   constructor(
     private prisma: PrismaService,
     private session: SessionService,
+    @Inject(REDIS_CLIENT)
+    private redis: RedisClientType,
   ) {}
 
-  get(): Promise<Cart | null> {
-    return this.prisma.cart.findUnique({
+  async get(): Promise<Cart | null> {
+    const cacheKey = `cart-${this.session.getUserId()}`
+
+    const getCart = await this.redis.get(cacheKey)
+
+    if (getCart) {
+      return JSON.parse(getCart)
+    }
+
+    const cart = this.prisma.cart.findUnique({
       where: {
         userId: this.session.getUserId(),
         deletedAt: null,
@@ -26,6 +38,10 @@ export class CartRespository implements ICartRepository {
         },
       },
     })
+
+    await this.redis.set(cacheKey, JSON.stringify(cart), { EX: 10 })
+
+    return cart
   }
 
   async create(data: CreateCartItemDto): Promise<CartItem> {

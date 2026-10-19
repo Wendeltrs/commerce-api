@@ -2,6 +2,7 @@ import { HttpModule } from '@nestjs/axios'
 import { Module } from '@nestjs/common'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
+import { RedisModule } from './common/infra/redis/redis.module'
 import { CloudinaryService } from './common/services/cloudinary/cloudinary.service'
 import { SessionService } from './common/services/session/session.service'
 import { ShippingService } from './common/services/shipping/shipping.service'
@@ -35,6 +36,7 @@ import { PrismaService } from './prisma/prisma.service'
     PrismaModule,
     CompaniesModule,
     PaymentsModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [

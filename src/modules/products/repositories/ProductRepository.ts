@@ -1,8 +1,10 @@
 import { randomUUID } from 'node:crypto'
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { Product } from 'prisma/generated/prisma/client'
+import type { RedisClientType } from 'redis'
 import { QueryDto } from 'src/common/decorators/query/dto/query.dto'
 import { CloudinaryService } from 'src/common/services/cloudinary/cloudinary.service'
+import { REDIS_CLIENT } from 'src/consts'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { CreateProductDto } from '../dto/create-product.dto'
 import { UpdateProductDto } from '../dto/update-product.dto'
@@ -13,10 +15,28 @@ export class ProductRepository implements IProductRepository {
   constructor(
     private prisma: PrismaService,
     private cloudinary: CloudinaryService,
+    @Inject(REDIS_CLIENT)
+    private redis: RedisClientType,
   ) {}
 
   async getAll(query?: QueryDto): Promise<[Product[], number]> {
-    return await this.prisma.extensions.product.findManyAndCount({
+    const cacheKey = `getAllProducts:${JSON.stringify({
+      skip: query?.skip,
+      take: query?.take,
+      orderBy: query?.orderBy,
+      where: {
+        ...query?.where,
+        deletedAt: null,
+      },
+    })}`
+
+    const getAllProducts = await this.redis.get(cacheKey)
+
+    if (getAllProducts) {
+      return JSON.parse(getAllProducts)
+    }
+
+    const products = await this.prisma.extensions.product.findManyAndCount({
       skip: query?.skip,
       take: query?.take,
       orderBy: query?.orderBy,
@@ -29,8 +49,12 @@ export class ProductRepository implements IProductRepository {
         category: true,
         company: true,
         orderItems: true,
-      }
+      },
     })
+
+    await this.redis.set(cacheKey, JSON.stringify(products), { EX: 10 })
+
+    return products
   }
 
   async get(id: string): Promise<Product | null> {
@@ -44,7 +68,7 @@ export class ProductRepository implements IProductRepository {
         category: true,
         company: true,
         orderItems: true,
-      }
+      },
     })
   }
 

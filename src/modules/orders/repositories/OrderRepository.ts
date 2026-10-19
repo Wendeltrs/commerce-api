@@ -1,13 +1,12 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
-
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { Order, OrderStatus, PaymentStatus } from 'prisma/generated/prisma/client'
-
+import type { RedisClientType } from 'redis'
 import { QueryDto } from 'src/common/decorators/query/dto/query.dto'
 import { SessionService } from 'src/common/services/session/session.service'
 import { ShippingService } from 'src/common/services/shipping/shipping.service'
 import { StripeService } from 'src/common/services/stripe/stripe.service'
+import { REDIS_CLIENT } from 'src/consts'
 import { PrismaService } from 'src/prisma/prisma.service'
-
 import { CreateOrderDto } from '../dto/create-order.dto'
 import { IOrderRepository } from './IOrderRepository'
 
@@ -18,10 +17,29 @@ export class OrderRepository implements IOrderRepository {
     private session: SessionService,
     private shipping: ShippingService,
     private stripe: StripeService,
+    @Inject(REDIS_CLIENT)
+    private redis: RedisClientType,
   ) {}
 
   async getAll(query?: QueryDto): Promise<[Order[], number]> {
-    return await this.prisma.extensions.order.findManyAndCount({
+    const cacheKey = `getAllOrders:${JSON.stringify({
+      skip: query?.skip,
+      take: query?.take,
+      orderBy: query?.orderBy,
+      where: {
+        ...query?.where,
+        userId: this.session.getUserId(),
+        deletedAt: null,
+      },
+    })}`
+
+    const getAllOrders = await this.redis.get(cacheKey)
+
+    if (getAllOrders) {
+      return JSON.parse(getAllOrders)
+    }
+
+    const orders = await this.prisma.extensions.order.findManyAndCount({
       skip: query?.skip,
       take: query?.take,
       orderBy: query?.orderBy,
@@ -38,6 +56,10 @@ export class OrderRepository implements IOrderRepository {
         items: true,
       },
     })
+
+    await this.redis.set(cacheKey, JSON.stringify(orders), { EX: 10 })
+
+    return orders
   }
 
   async get(id: string): Promise<Order | null> {
@@ -58,6 +80,14 @@ export class OrderRepository implements IOrderRepository {
 
   async calculateShipping(addressId: string) {
     const userId = this.session.getUserId()
+
+    const calculateCacheKey = `calculateShipping:${userId}`
+
+    const calculateShipping = await this.redis.get(calculateCacheKey)
+
+    if (calculateShipping) {
+      return JSON.parse(calculateShipping)
+    }
 
     const cart = await this.prisma.cart.findUnique({
       where: {
@@ -119,10 +149,9 @@ export class OrderRepository implements IOrderRepository {
       throw new BadRequestException('Company address not found')
     }
 
-    return this.shipping.calculate(
+    const shipping = await this.shipping.calculate(
       company.address.zipCode,
       address.zipCode,
-
       cart.items.map((item) => ({
         id: item.product.id,
         weight: item.product.weight,
@@ -133,6 +162,10 @@ export class OrderRepository implements IOrderRepository {
         quantity: item.quantity,
       })),
     )
+
+    await this.redis.set(calculateCacheKey, JSON.stringify(shipping), { EX: 10 })
+
+    return shipping
   }
 
   async create(data: CreateOrderDto): Promise<{

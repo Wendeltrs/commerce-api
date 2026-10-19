@@ -16,6 +16,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
 
   async validate(_accessToken: string, _refreshToken: string, profile: Profile) {
     const email = profile.emails?.[0].value
+    const avatar = profile.photos?.[0]?.value
 
     const user = await this.prisma.user.findUnique({
       where: {
@@ -24,6 +25,13 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
     })
 
     if (!user) null
+
+    if (avatar && !user?.avatar) {
+      await this.prisma.user.update({
+        where: { id: user?.id },
+        data: { avatar },
+      })
+    }
 
     return user
   }
