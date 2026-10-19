@@ -1,5 +1,6 @@
 import { HttpModule } from '@nestjs/axios'
 import { Module } from '@nestjs/common'
+import { RedisModule } from 'src/common/infra/redis/redis.module'
 import { SessionService } from 'src/common/services/session/session.service'
 import { ShippingService } from 'src/common/services/shipping/shipping.service'
 import { StripeService } from 'src/common/services/stripe/stripe.service'
@@ -8,7 +9,7 @@ import { IOrderRepository } from './IOrderRepository'
 import { OrderRepository } from './OrderRepository'
 
 @Module({
-  imports: [HttpModule],
+  imports: [HttpModule, RedisModule],
   providers: [
     {
       provide: IOrderRepository,

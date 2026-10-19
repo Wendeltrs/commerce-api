@@ -1,8 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { Role, User } from 'prisma/generated/prisma/client'
+import type { RedisClientType } from 'redis'
 import { QueryDto } from 'src/common/decorators/query/dto/query.dto'
 import { CloudinaryService } from 'src/common/services/cloudinary/cloudinary.service'
 import { SessionService } from 'src/common/services/session/session.service'
+import { REDIS_CLIENT } from 'src/consts'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { CreateUserDto } from '../dto/create-user.dto'
 import { UpdateUserDto } from '../dto/update-user.dto'
@@ -14,10 +16,28 @@ export class UserRepository implements IUserRepository {
     private prisma: PrismaService,
     private session: SessionService,
     private cloudinary: CloudinaryService,
+    @Inject(REDIS_CLIENT)
+    private redis: RedisClientType,
   ) {}
 
   async getAll(query?: QueryDto): Promise<[User[], number]> {
-    return await this.prisma.extensions.user.findManyAndCount({
+    const cacheKey = `getAllUsers:${JSON.stringify({
+      skip: query?.skip,
+      take: query?.take,
+      orderBy: query?.orderBy,
+      where: {
+        ...query?.where,
+        deletedAt: null,
+      },
+    })}`
+
+    const getAllUsers = await this.redis.get(cacheKey)
+
+    if (getAllUsers) {
+      return JSON.parse(getAllUsers)
+    }
+
+    const users = await this.prisma.extensions.user.findManyAndCount({
       skip: query?.skip,
       take: query?.take,
       orderBy: query?.orderBy,
@@ -40,6 +60,10 @@ export class UserRepository implements IUserRepository {
         company: true,
       },
     })
+
+    await this.redis.set(cacheKey, JSON.stringify(users), { EX: 10 })
+
+    return users
   }
 
   async getById(id: string): Promise<User | null> {

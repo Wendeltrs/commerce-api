@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { Address } from 'prisma/generated/prisma/client'
+import type { RedisClientType } from 'redis'
 import { QueryDto } from 'src/common/decorators/query/dto/query.dto'
 import { SessionService } from 'src/common/services/session/session.service'
+import { REDIS_CLIENT } from 'src/consts'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { CreateAddressDto } from '../dto/create-address.dto'
 import { UpdateAddressDto } from '../dto/update-address.dto'
@@ -12,10 +14,29 @@ export class AddressRepository implements IAddressRepository {
   constructor(
     private prisma: PrismaService,
     private session: SessionService,
+    @Inject(REDIS_CLIENT)
+    private redis: RedisClientType,
   ) {}
 
   async getAll(query?: QueryDto): Promise<[Address[], number]> {
-    return await this.prisma.extensions.address.findManyAndCount({
+    const cacheKey = `getAllAddresses:${JSON.stringify({
+      skip: query?.skip,
+      take: query?.take,
+      orderBy: query?.orderBy,
+      where: {
+        ...query?.where,
+        userId: this.session.getUserId(),
+        deletedAt: null,
+      },
+    })}`
+
+    const getAllAddresses = await this.redis.get(cacheKey)
+
+    if (getAllAddresses) {
+      return JSON.parse(getAllAddresses)
+    }
+
+    const addresses = await this.prisma.extensions.address.findManyAndCount({
       skip: query?.skip,
       take: query?.take,
       orderBy: query?.orderBy,
@@ -29,6 +50,10 @@ export class AddressRepository implements IAddressRepository {
         user: true,
       },
     })
+
+    await this.redis.set(cacheKey, JSON.stringify(addresses), { EX: 10 })
+
+    return addresses
   }
 
   async get(id: string): Promise<Address | null> {
