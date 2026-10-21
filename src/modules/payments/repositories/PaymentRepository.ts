@@ -78,24 +78,37 @@ export class PaymentRepository implements IPaymentRepository {
       }
     }
 
-    await this.prisma.payment.update({
-      where: {
-        id: payment.id,
-      },
-      data: {
-        status: PaymentStatus.PAID,
-        method,
-      },
+    const claimed = await this.prisma.$transaction(async (transaction) => {
+      const updatedPayment = await transaction.payment.updateMany({
+        where: {
+          id: payment.id,
+          status: PaymentStatus.PENDING,
+        },
+        data: {
+          status: PaymentStatus.PAID,
+          method,
+        },
+      })
+
+      if (updatedPayment.count === 0) {
+        return false
+      }
+
+      await transaction.order.update({
+        where: {
+          id: orderId,
+        },
+        data: {
+          status: OrderStatus.CONFIRMED,
+        },
+      })
+
+      return true
     })
 
-    await this.prisma.order.update({
-      where: {
-        id: orderId,
-      },
-      data: {
-        status: OrderStatus.CONFIRMED,
-      },
-    })
+    if (!claimed) {
+      return
+    }
 
     await this.createShipping(orderId)
   }
@@ -117,9 +130,10 @@ export class PaymentRepository implements IPaymentRepository {
       return
     }
 
-    await this.prisma.payment.update({
+    await this.prisma.payment.updateMany({
       where: {
         id: payment.id,
+        status: PaymentStatus.PENDING,
       },
       data: {
         status: PaymentStatus.FAILED,

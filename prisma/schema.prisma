@@ -171,13 +171,27 @@ model Order {
   updatedAt           DateTime    @updatedAt()
   deletedAt           DateTime?
 
-  items         OrderItem[]
-  payment       Payment?
+  items               OrderItem[]
+  payment             Payment?
+  idempotency         IdempotencyKey?
 
   @@index([userId])
   @@index([addressId])
   @@index([status])
   @@map("order")
+}
+
+model IdempotencyKey {
+  id          String   @id @default(uuid()) @db.Uuid()
+  userId      String   @db.Uuid()
+  key         String   @db.VarChar(255)
+  requestHash String   @db.VarChar(64)
+  orderId     String   @unique @db.Uuid()
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, key])
+  @@map("idempotency_key")
 }
 
 model OrderItem {
@@ -205,6 +219,7 @@ model Payment {
   method        PaymentMethod?
   status        PaymentStatus @default(PENDING)
   transactionId String?       @db.VarChar(250)
+  checkoutUrl   String?       @db.VarChar(2048)
   amount        Int           @db.Integer()
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt()
@@ -214,19 +229,19 @@ model Payment {
 }
 
 model Company {
-  id             String    @id @default(uuid()) @db.Uuid()
-  name           String    @db.VarChar(250)
-  phone          String    @db.VarChar(30)
-  document       String    @db.VarChar(30)
-  userId         String    @unique @db.Uuid()
-  user           User      @relation(fields: [userId], references: [id])
-  addressId      String    @unique @db.Uuid()
-  address        Address   @relation(fields: [addressId], references: [id])
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt()
-  deletedAt      DateTime?
+  id        String    @id @default(uuid()) @db.Uuid()
+  name      String    @db.VarChar(250)
+  phone     String    @db.VarChar(30)
+  document  String    @db.VarChar(30)
+  userId    String    @unique @db.Uuid()
+  user      User      @relation(fields: [userId], references: [id])
+  addressId String    @unique @db.Uuid()
+  address   Address   @relation(fields: [addressId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt()
+  deletedAt DateTime?
 
-  products       Product[]
+  products  Product[]
 
   @@map("company")
 }

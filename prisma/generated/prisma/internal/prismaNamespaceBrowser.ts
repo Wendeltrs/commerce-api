@@ -58,6 +58,7 @@ export const ModelName = {
   Cart: 'Cart',
   CartItem: 'CartItem',
   Order: 'Order',
+  IdempotencyKey: 'IdempotencyKey',
   OrderItem: 'OrderItem',
   Payment: 'Payment',
   Company: 'Company'
@@ -196,6 +197,18 @@ export const OrderScalarFieldEnum = {
 export type OrderScalarFieldEnum = (typeof OrderScalarFieldEnum)[keyof typeof OrderScalarFieldEnum]
 
 
+export const IdempotencyKeyScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  key: 'key',
+  requestHash: 'requestHash',
+  orderId: 'orderId',
+  createdAt: 'createdAt'
+} as const
+
+export type IdempotencyKeyScalarFieldEnum = (typeof IdempotencyKeyScalarFieldEnum)[keyof typeof IdempotencyKeyScalarFieldEnum]
+
+
 export const OrderItemScalarFieldEnum = {
   id: 'id',
   orderId: 'orderId',
@@ -217,6 +230,7 @@ export const PaymentScalarFieldEnum = {
   method: 'method',
   status: 'status',
   transactionId: 'transactionId',
+  checkoutUrl: 'checkoutUrl',
   amount: 'amount',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
