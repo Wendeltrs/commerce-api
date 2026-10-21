@@ -1,5 +1,12 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common'
-import { Order, OrderStatus, PaymentStatus } from 'prisma/generated/prisma/client'
+import { createHash } from 'node:crypto'
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
+import { Order, OrderStatus, PaymentStatus, Prisma } from 'prisma/generated/prisma/client'
 import type { RedisClientType } from 'redis'
 import { QueryDto } from 'src/common/decorators/query/dto/query.dto'
 import { SessionService } from 'src/common/services/session/session.service'
@@ -173,6 +180,23 @@ export class OrderRepository implements IOrderRepository {
     paymentUrl: string
   }> {
     const userId = this.session.getUserId()
+    const requestHash = createHash('sha256')
+      .update(JSON.stringify([data.addressId, data.shippingServiceId]))
+      .digest('hex')
+    const idempotencyKey = `${userId}-${requestHash}`
+
+    const existingKey = await this.prisma.idempotencyKey.findUnique({
+      where: {
+        userId_key: {
+          userId,
+          key: idempotencyKey,
+        },
+      },
+    })
+
+    if (existingKey) {
+      return this.replayOrder(existingKey, requestHash)
+    }
 
     const cart = await this.prisma.cart.findUnique({
       where: {
@@ -268,44 +292,111 @@ export class OrderRepository implements IOrderRepository {
 
     const shippingCost = shipping.price
     const total = subtotal + shippingCost
+    let orderId: string
 
-    const order = await this.prisma.order.create({
-      data: {
-        addressId: addressTo.id,
-        userId,
-        status: OrderStatus.PENDING,
-        subtotal: Number(subtotal),
-        shippingCost: Number(shippingCost),
-        total: Number(total),
-        shippingName: shipping.name,
-        shippingCompanyName: shipping.companyName,
-        shippingTime: String(shipping.deliveryTime),
-        items: {
-          createMany: {
-            data: cart.items.map((item) => ({
-              productId: item.product.id,
-              productName: item.product.name,
-              price: Number(item.product.price),
-              quantity: item.quantity,
-            })),
+    try {
+      orderId = await this.prisma.$transaction(async (transaction) => {
+        const order = await transaction.order.create({
+          data: {
+            addressId: addressTo.id,
+            userId,
+            status: OrderStatus.PENDING,
+            subtotal: Number(subtotal),
+            shippingCost: Number(shippingCost),
+            total: Number(total),
+            shippingName: shipping.name,
+            shippingCompanyName: shipping.companyName,
+            shippingTime: String(shipping.deliveryTime),
+            items: {
+              createMany: {
+                data: cart.items.map((item) => ({
+                  productId: item.product.id,
+                  productName: item.product.name,
+                  price: Number(item.product.price),
+                  quantity: item.quantity,
+                })),
+              },
+            },
+            payment: {
+              create: {
+                amount: Number(total),
+                status: PaymentStatus.PENDING,
+              },
+            },
           },
-        },
-        payment: {
-          create: {
-            amount: Number(total),
-            status: PaymentStatus.PENDING,
+        })
+
+        await transaction.idempotencyKey.create({
+          data: {
+            userId,
+            key: idempotencyKey,
+            requestHash,
+            orderId: order.id,
           },
-        },
+        })
+
+        return order.id
+      })
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        const concurrentKey = await this.prisma.idempotencyKey.findUnique({
+          where: {
+            userId_key: {
+              userId,
+              key: idempotencyKey,
+            },
+          },
+        })
+
+        if (concurrentKey) {
+          return this.replayOrder(concurrentKey, requestHash)
+        }
+      }
+
+      throw error
+    }
+
+    return this.replayOrder({ orderId, requestHash }, requestHash)
+  }
+
+  private async replayOrder(
+    idempotencyKey: { orderId: string; requestHash: string },
+    requestHash: string,
+  ): Promise<{ order: Order; paymentUrl: string }> {
+    if (idempotencyKey.requestHash !== requestHash) {
+      throw new ConflictException('Idempotency-Key was already used with a different request')
+    }
+
+    const order = await this.prisma.order.findUnique({
+      where: { id: idempotencyKey.orderId },
+      include: {
+        address: { include: { user: true } },
+        items: { where: { deletedAt: null } },
+        payment: true,
       },
     })
 
-    const stripeProducts = cart.items.map((item) => ({
+    if (!order?.payment) {
+      throw new NotFoundException('Order not found')
+    }
+
+    const cachedPaymentUrl = order.payment.checkoutUrl
+
+    if (cachedPaymentUrl) {
+      const { address, items, payment, ...orderData } = order
+      return {
+        order: orderData,
+        paymentUrl: cachedPaymentUrl,
+      }
+    }
+
+    const stripeProducts = order.items.map((item) => ({
       price_data: {
         currency: 'brl',
         product_data: {
-          name: item.product.name,
+          name: item.productName,
         },
-        unit_amount: Math.round(Number(item.product.price) * 100),
+        unit_amount: Math.round(Number(item.price) * 100),
       },
       quantity: item.quantity,
     }))
@@ -314,27 +405,50 @@ export class OrderRepository implements IOrderRepository {
       price_data: {
         currency: 'brl',
         product_data: {
-          name: `Frete - ${shipping.name}`,
+          name: `Frete - ${order.shippingName}`,
         },
-        unit_amount: Math.round(shippingCost * 100),
+        unit_amount: Math.round(Number(order.shippingCost) * 100),
       },
       quantity: 1,
     })
 
-    const stripeSession = await this.stripe.session(addressTo.user.email, order.id, stripeProducts)
+    let paymentUrl: string
 
-    await this.prisma.payment.update({
-      where: {
-        orderId: order.id,
-      },
-      data: {
-        transactionId: stripeSession.id,
-      },
-    })
+    if (order.payment.transactionId) {
+      const stripeSession = await this.stripe.verifySession(order.payment.transactionId)
+
+      if (!stripeSession.url) {
+        throw new Error('Stripe checkout session does not have a payment URL')
+      }
+
+      paymentUrl = stripeSession.url
+    } else {
+      const stripeSession = await this.stripe.session(
+        order.address.user.email,
+        order.id,
+        stripeProducts,
+      )
+
+      paymentUrl = stripeSession.url
+
+      await this.prisma.payment.update({
+        where: { orderId: order.id },
+        data: { transactionId: stripeSession.id, checkoutUrl: paymentUrl },
+      })
+    }
+
+    if (order.payment.transactionId && !order.payment.checkoutUrl) {
+      await this.prisma.payment.update({
+        where: { orderId: order.id },
+        data: { checkoutUrl: paymentUrl },
+      })
+    }
+
+    const { address, items, payment, ...orderData } = order
 
     return {
-      order,
-      paymentUrl: stripeSession.url,
+      order: orderData,
+      paymentUrl,
     }
   }
 
