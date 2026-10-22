@@ -1,7 +1,10 @@
 import { HttpModule } from '@nestjs/axios'
 import { Module } from '@nestjs/common'
+import { APP_GUARD } from '@nestjs/core'
+import { ThrottlerModule } from '@nestjs/throttler'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
+import { ThrottlerBehindProxyGuard } from './common/guards/throttler-behind-proxy/throttler-behind-proxy.guard'
 import { RedisModule } from './common/infra/redis/redis.module'
 import { CloudinaryService } from './common/services/cloudinary/cloudinary.service'
 import { SessionService } from './common/services/session/session.service'
@@ -23,6 +26,23 @@ import { PrismaService } from './prisma/prisma.service'
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 1000,
+        limit: 3,
+      },
+      {
+        name: 'medium',
+        ttl: 10000,
+        limit: 10,
+      },
+      {
+        name: 'long',
+        ttl: 100000,
+        limit: 100,
+      },
+    ]),
     UsersModule,
     AuthModule,
     BcryptoRepositoryModule,
@@ -40,6 +60,10 @@ import { PrismaService } from './prisma/prisma.service'
   ],
   controllers: [AppController],
   providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerBehindProxyGuard,
+    },
     AppService,
     PrismaService,
     CloudinaryService,
